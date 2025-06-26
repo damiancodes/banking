@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --kcb-primary: #2E7D32;
+  --kcb-secondary: #388E3C;
+  --kcb-light: #C8E6C9;
+  --kcb-dark: #1B5E20;
+  --background: #f9f9f9;
+  --foreground: #111;
+}
+
+.dark {
+  --kcb-primary: #388E3C;
+  --kcb-secondary: #2E7D32;
+  --kcb-light: #263238;
+  --kcb-dark: #C8E6C9;
+  --background: #181f1b;
+  --foreground: #f3f3f3;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Custom utility classes */
+.bg-kcb-primary {
+  background-color: var(--kcb-primary);
+}
+
+.bg-kcb-secondary {
+  background-color: var(--kcb-secondary);
+}
+
+.bg-kcb-light {
+  background-color: var(--kcb-light);
+}
+
+.bg-kcb-dark {
+  background-color: var(--kcb-dark);
+}
+
+.text-kcb-primary {
+  color: var(--kcb-primary);
+}
+
+.text-kcb-secondary {
+  color: var(--kcb-secondary);
+}
+
+.text-kcb-light {
+  color: var(--kcb-light);
+}
+
+.text-kcb-dark {
+  color: var(--kcb-dark);
+}
+
+.border-kcb-primary {
+  border-color: var(--kcb-primary);
+}
+
+.border-kcb-secondary {
+  border-color: var(--kcb-secondary);
+}
+
+.border-kcb-light {
+  border-color: var(--kcb-light);
+}
+
+.border-kcb-dark {
+  border-color: var(--kcb-dark);
+}
+
+.ring-kcb-primary {
+  --tw-ring-color: var(--kcb-primary);
+}
+
+.ring-kcb-secondary {
+  --tw-ring-color: var(--kcb-secondary);
+}
+
+/* Hover states */
+.hover\:bg-kcb-primary:hover {
+  background-color: var(--kcb-primary);
+}
+
+.hover\:bg-kcb-secondary:hover {
+  background-color: var(--kcb-secondary);
+}
+
+.hover\:bg-kcb-light:hover {
+  background-color: var(--kcb-light);
+}
+
+.hover\:bg-kcb-dark:hover {
+  background-color: var(--kcb-dark);
+}
+
+.hover\:text-kcb-primary:hover {
+  color: var(--kcb-primary);
+}
+
+.hover\:text-kcb-secondary:hover {
+  color: var(--kcb-secondary);
+}
+
+.hover\:text-kcb-light:hover {
+  color: var(--kcb-light);
+}
+
+.hover\:text-kcb-dark:hover {
+  color: var(--kcb-dark);
+}
+
+.hover\:border-kcb-primary:hover {
+  border-color: var(--kcb-primary);
+}
+
+.hover\:border-kcb-secondary:hover {
+  border-color: var(--kcb-secondary);
+}
+
+/* Focus states */
+.focus\:ring-kcb-primary:focus {
+  --tw-ring-color: var(--kcb-primary);
+}
+
+.focus\:border-kcb-primary:focus {
+  border-color: var(--kcb-primary);
+}
+
+.focus\:ring-kcb-secondary:focus {
+  --tw-ring-color: var(--kcb-secondary);
+}
+
+.focus\:border-kcb-secondary:focus {
+  border-color: var(--kcb-secondary);
+}
+
+/* Header font weight overrides */
+.header-title, .header-amount {
+  font-weight: 500 !important; /* medium, not bold */
+  letter-spacing: normal !important;
+}
+
+/* Optional: utility for reduced vertical padding */
+.py-header-tight {
+  padding-top: 1.5rem !important;
+  padding-bottom: 1.5rem !important;
+}

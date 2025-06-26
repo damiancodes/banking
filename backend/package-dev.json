@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "install-deps": "npm install",
+    "create-db": "node -e \"require('./src/config/database').initializeDatabase().then(() => console.log('Database created')).catch(console.error)\"",
+    "seed-db": "node -e \"require('./src/config/database').initializeDatabase().then(() => console.log('Database seeded')).catch(console.error)\"",
+    "test-server": "curl http://localhost:3001/api/health",
+    "dev-full": "npm run install-deps && npm run dev"
+  }
+}
