@@ -37,6 +37,17 @@ const TransferForm: React.FC<TransferFormProps> = ({
   });
   const [isFutureTransfer, setIsFutureTransfer] = useState(false);
 
+  // Success state management
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [successData, setSuccessData] = useState<{
+    amount: number;
+    fromAccount: string;
+    toAccount: string;
+    currency: string;
+    isScheduled: boolean;
+    transferDate: string;
+  } | null>(null);
+
   // Set initial from account if provided
   useEffect(() => {
     if (initialFromAccount) {
@@ -55,7 +66,7 @@ const TransferForm: React.FC<TransferFormProps> = ({
     if (formData.from_account && formData.to_account && formData.amount > 0) {
       const fromAccount = accounts.find(acc => acc.name === formData.from_account);
       const toAccount = accounts.find(acc => acc.name === formData.to_account);
-      
+
       if (fromAccount && toAccount && fromAccount.currency !== toAccount.currency) {
         // Static exchange rates (in real app, these would come from API)
         const rates: Record<string, Record<string, number>> = {
@@ -63,7 +74,7 @@ const TransferForm: React.FC<TransferFormProps> = ({
           USD: { KES: 149.25, NGN: 27.75 },
           NGN: { KES: 5.38, USD: 0.036 }
         };
-        
+
         const rate = rates[fromAccount.currency]?.[toAccount.currency];
         if (rate) {
           setExchangeRate(rate);
@@ -82,36 +93,36 @@ const TransferForm: React.FC<TransferFormProps> = ({
   // Real-time validation
   useEffect(() => {
     const errors: Record<string, string> = {};
-    
+
     if (formData.from_account && formData.to_account && formData.from_account === formData.to_account) {
       errors.to_account = 'Source and destination accounts must be different';
     }
-    
+
     if (formData.amount > 0) {
       const fromAccount = accounts.find(acc => acc.name === formData.from_account);
       if (fromAccount && formData.amount > fromAccount.balance) {
         errors.amount = `Insufficient balance. Available: ${fromAccount.formatted_balance}`;
       }
     }
-    
+
     setValidationErrors(prev => ({ ...prev, ...errors }));
   }, [formData, accounts]);
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
-    
+
     if (!formData.from_account) {
       errors.from_account = 'Please select a source account';
     }
-    
+
     if (!formData.to_account) {
       errors.to_account = 'Please select a destination account';
     }
-    
+
     if (formData.from_account === formData.to_account) {
       errors.to_account = 'Source and destination accounts must be different';
     }
-    
+
     if (!formData.amount || formData.amount <= 0) {
       errors.amount = 'Please enter a valid amount';
     } else {
@@ -120,7 +131,7 @@ const TransferForm: React.FC<TransferFormProps> = ({
         errors.amount = `Insufficient balance. Available: ${fromAccount.formatted_balance}`;
       }
     }
-    
+
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -128,11 +139,45 @@ const TransferForm: React.FC<TransferFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      let noteWithDate = formData.note || '';
-      if (!noteWithDate.includes('transfer_date:')) {
-        noteWithDate = (noteWithDate ? noteWithDate + ' ' : '') + `transfer_date:${transferDate}`;
+      try {
+        let noteWithDate = formData.note || '';
+        if (!noteWithDate.includes('transfer_date:')) {
+          noteWithDate = (noteWithDate ? noteWithDate + ' ' : '') + `transfer_date:${transferDate}`;
+        }
+
+        // Store success data before submitting
+        const fromAccount = accounts.find(acc => acc.name === formData.from_account);
+        setSuccessData({
+          amount: formData.amount,
+          fromAccount: formData.from_account,
+          toAccount: formData.to_account,
+          currency: fromAccount?.currency || '',
+          isScheduled: isFutureTransfer,
+          transferDate: transferDate
+        });
+
+        await onSubmit({ ...formData, note: noteWithDate });
+
+        // Show success state
+        setIsSuccess(true);
+
+        // Auto-hide success message after 5 seconds
+        setTimeout(() => {
+          setIsSuccess(false);
+          // Reset form
+          setFormData({
+            from_account: '',
+            to_account: '',
+            amount: 0,
+            note: ''
+          });
+          setTransferDate(new Date().toISOString().slice(0, 10));
+        }, 5000);
+
+      } catch (error) {
+        // Error handling is done by parent component
+        setIsSuccess(false);
       }
-      await onSubmit({ ...formData, note: noteWithDate });
     }
   };
 
@@ -154,9 +199,115 @@ const TransferForm: React.FC<TransferFormProps> = ({
       ));
   };
 
+  const handleNewTransfer = () => {
+    setIsSuccess(false);
+    setFormData({
+      from_account: '',
+      to_account: '',
+      amount: 0,
+      note: ''
+    });
+    setTransferDate(new Date().toISOString().slice(0, 10));
+    setSuccessData(null);
+  };
+
   const fromAccount = accounts.find(acc => acc.name === formData.from_account);
   const toAccount = accounts.find(acc => acc.name === formData.to_account);
 
+  // Success Screen
+  if (isSuccess && successData) {
+    return (
+      <div className="max-w-lg mx-auto mt-8">
+        <div className="bg-white/90 rounded-2xl shadow-lg p-8 text-center">
+          {/* Success Icon */}
+          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
+            <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+
+          {/* Success Title */}
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            {successData.isScheduled ? 'Transfer Scheduled!' : 'Transfer Successful!'}
+          </h2>
+
+          {/* Success Message */}
+          <p className="text-gray-600 mb-6">
+            {successData.isScheduled 
+              ? `Your transfer has been scheduled for ${new Date(successData.transferDate).toLocaleDateString()}`
+              : 'Your money transfer has been completed successfully'
+            }
+          </p>
+
+          {/* Transfer Details Card */}
+          <div className="bg-gray-50 rounded-xl p-6 mb-6 text-left">
+            <h3 className="font-semibold text-gray-900 mb-4 text-center">Transfer Details</h3>
+
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Amount:</span>
+                <span className="font-semibold text-lg text-green-600">
+                  {successData.currency} {successData.amount.toLocaleString()}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">From:</span>
+                <span className="font-medium">{successData.fromAccount}</span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">To:</span>
+                <span className="font-medium">{successData.toAccount}</span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">
+                  {successData.isScheduled ? 'Scheduled Date:' : 'Transfer Date:'}
+                </span>
+                <span className="font-medium">
+                  {new Date(successData.transferDate).toLocaleDateString()}
+                </span>
+              </div>
+
+              {successData.isScheduled && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Status:</span>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    Scheduled
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={handleNewTransfer}
+              className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
+            >
+              Make Another Transfer
+            </button>
+
+            <button
+              onClick={onCancel}
+              className="flex-1 px-6 py-3 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+            >
+              Back to Dashboard
+            </button>
+          </div>
+
+          {/* Auto-close notification */}
+          <p className="text-xs text-gray-500 mt-4">
+            This screen will automatically close in 5 seconds
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Main Transfer Form
   return (
     <div className="max-w-lg mx-auto mt-8">
       <div className="bg-white/90 rounded-2xl shadow-lg p-8">

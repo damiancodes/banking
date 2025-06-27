@@ -12,28 +12,28 @@ const { initializeDatabase } = require('./src/config/database');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Security middleware
+
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
+  origin: '*',
+  credentials: false,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Logging middleware
+
 app.use(morgan('combined'));
 
-// Body parsing middleware
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Routes
 app.use('/api/accounts', accountRoutes);
 app.use('/api/transactions', transactionRoutes);
 
-// Health check endpoint
+
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
@@ -63,7 +63,7 @@ app.use('*', (req, res) => {
   });
 });
 
-// Initialize database and start server
+
 async function startServer() {
   try {
     await initializeDatabase();

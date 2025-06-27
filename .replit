@@ -1,0 +1,21 @@
+
+modules = ["nodejs-20", "web", "bash"]
+run = "npm start"
+
+[nix]
+channel = "stable-24_05"
+packages = ["psmisc"]
+
+[deployment]
+run = ["sh", "-c", "npm start"]
+
+[[ports]]
+localPort = 3000
+externalPort = 80
+
+[[ports]]
+localPort = 3001
+externalPort = 3001
+
+[env]
+NODE_ENV = "development"
