@@ -75,7 +75,7 @@ const Sidebar: React.FC<SidebarProps> = ({ current, onNavigate }) => {
       <div>
         <div className="flex items-center justify-center h-20 border-b border-green-700 dark:border-kcb-light bg-gradient-to-r from-kcb-primary to-kcb-secondary dark:from-kcb-dark dark:to-kcb-primary">
           <div className="flex items-center space-x-3">
-            <img src="/logo.png" alt="Treasury Logo" className="w-10 h-10 rounded-lg shadow-md bg-white object-contain" />
+            <img src="/logo.png" alt="Treasury Logo" className="w-10 h-10 rounded-full shadow-md bg-white object-cover mx-auto my-2" />
             <span className="text-lg font-semibold text-white dark:text-kcb-light">Treasury</span>
           </div>
         </div>

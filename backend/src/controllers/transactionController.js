@@ -85,7 +85,7 @@ class TransactionController {
 
   static async createTransaction(req, res) {
     try {
-      const { from_account, to_account, amount, note } = req.body;
+      const { from_account, to_account, amount, note, transfer_date } = req.body;
 
       // Validate transaction data
       const validation = ValidationHelpers.validateTransferData({
@@ -121,7 +121,8 @@ class TransactionController {
         to_account: ValidationHelpers.sanitizeString(to_account),
         amount: parseFloat(amount),
         note: ValidationHelpers.sanitizeString(note || ''),
-        exchange_rate
+        exchange_rate,
+        transfer_date: transfer_date || null
       };
 
       const newTransaction = await Transaction.create(transactionData);

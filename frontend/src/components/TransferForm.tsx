@@ -31,6 +31,10 @@ const TransferForm: React.FC<TransferFormProps> = ({
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
   const [convertedAmount, setConvertedAmount] = useState<number | null>(null);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [transferDate, setTransferDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().slice(0, 10);
+  });
 
   // Set initial from account if provided
   useEffect(() => {
@@ -98,9 +102,12 @@ const TransferForm: React.FC<TransferFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (validateForm()) {
-      await onSubmit(formData);
+      let noteWithDate = formData.note || '';
+      if (!noteWithDate.includes('transfer_date:')) {
+        noteWithDate = (noteWithDate ? noteWithDate + ' ' : '') + `transfer_date:${transferDate}`;
+      }
+      await onSubmit({ ...formData, note: noteWithDate });
     }
   };
 
@@ -126,16 +133,17 @@ const TransferForm: React.FC<TransferFormProps> = ({
   const toAccount = accounts.find(acc => acc.name === formData.to_account);
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Transfer Money</h2>
-          <p className="text-gray-600">Move funds between your treasury accounts</p>
+    <div className="max-w-lg mx-auto mt-8">
+      <div className="bg-white/90 rounded-2xl shadow-lg p-8">
+        <div className="flex items-center mb-6">
+          <svg className="w-8 h-8 text-kcb-primary mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+          </svg>
+          <h2 className="text-2xl font-bold text-gray-900">Transfer Money</h2>
         </div>
-
+        <div className="border-b border-gray-200 mb-6" />
         {error && <ErrorMessage message={error} />}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* From Account */}
           <div>
             <label htmlFor="from_account" className="block text-sm font-medium text-gray-700 mb-2">
@@ -145,7 +153,7 @@ const TransferForm: React.FC<TransferFormProps> = ({
               id="from_account"
               value={formData.from_account}
               onChange={(e) => handleInputChange('from_account', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-kcb-primary focus:border-kcb-primary ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-kcb-primary focus:border-kcb-primary bg-white/80 ${
                 validationErrors.from_account ? 'border-red-300' : 'border-gray-300'
               }`}
             >
@@ -166,7 +174,7 @@ const TransferForm: React.FC<TransferFormProps> = ({
               id="to_account"
               value={formData.to_account}
               onChange={(e) => handleInputChange('to_account', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-kcb-primary focus:border-kcb-primary ${
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-kcb-primary focus:border-kcb-primary bg-white/80 ${
                 validationErrors.to_account ? 'border-red-300' : 'border-gray-300'
               }`}
             >
@@ -191,7 +199,7 @@ const TransferForm: React.FC<TransferFormProps> = ({
                 onChange={(e) => handleInputChange('amount', parseFloat(e.target.value) || 0)}
                 step="0.01"
                 min="0"
-                className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-kcb-primary focus:border-kcb-primary ${
+                className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-kcb-primary focus:border-kcb-primary bg-white/80 ${
                   validationErrors.amount ? 'border-red-300' : 'border-gray-300'
                 }`}
                 placeholder="0.00"
@@ -210,6 +218,22 @@ const TransferForm: React.FC<TransferFormProps> = ({
                 Available balance: {fromAccount.formatted_balance}
               </p>
             )}
+          </div>
+
+          {/* Date Picker */}
+          <div>
+            <label htmlFor="transfer_date" className="block text-sm font-medium text-gray-700 mb-2">
+              Transfer Date
+            </label>
+            <input
+              type="date"
+              id="transfer_date"
+              value={transferDate}
+              min={new Date().toISOString().slice(0, 10)}
+              onChange={e => setTransferDate(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-kcb-primary focus:border-kcb-primary bg-white/80 border-gray-300"
+            />
+            <p className="mt-1 text-xs text-gray-500">Choose a future date to schedule this transfer, or today for immediate transfer.</p>
           </div>
 
           {/* Exchange Rate Info */}
@@ -247,7 +271,7 @@ const TransferForm: React.FC<TransferFormProps> = ({
               value={formData.note}
               onChange={(e) => handleInputChange('note', e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kcb-primary focus:border-kcb-primary"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-kcb-primary focus:border-kcb-primary bg-white/80"
               placeholder="Add a note about this transfer..."
             />
           </div>
@@ -266,7 +290,7 @@ const TransferForm: React.FC<TransferFormProps> = ({
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 text-sm font-medium text-white bg-kcb-primary border border-transparent rounded-lg hover:bg-kcb-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-kcb-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              className="w-full h-12 text-sm font-semibold text-white bg-kcb-primary border border-transparent rounded-lg shadow hover:bg-kcb-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-kcb-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 transition"
             >
               {loading ? (
                 <>

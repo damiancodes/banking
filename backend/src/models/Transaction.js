@@ -37,7 +37,7 @@ class Transaction {
         query += ' WHERE ' + conditions.join(' AND ');
       }
 
-      query += ' ORDER BY created_at DESC';
+      query += ' ORDER BY COALESCE(transfer_date, created_at) DESC';
 
       if (filters.limit) {
         query += ' LIMIT ?';
@@ -84,7 +84,8 @@ class Transaction {
         to_account,
         amount,
         note = '',
-        exchange_rate = 1.0
+        exchange_rate = 1.0,
+        transfer_date = null
       } = transactionData;
 
       // Validate accounts exist
@@ -117,11 +118,11 @@ class Transaction {
         const result = await database.run(`
           INSERT INTO transactions (
             transaction_id, from_account, to_account, amount, 
-            currency, exchange_rate, converted_amount, note, status
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'completed')
+            currency, exchange_rate, converted_amount, note, transfer_date, status
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'completed')
         `, [
           transaction_id, from_account, to_account, amount,
-          currency, exchange_rate, converted_amount, note
+          currency, exchange_rate, converted_amount, note, transfer_date
         ]);
 
         // Update account balances

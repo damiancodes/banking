@@ -106,6 +106,7 @@ async function initializeDatabase() {
       converted_amount DECIMAL(15,2),
       note TEXT,
       status TEXT DEFAULT 'completed' CHECK (status IN ('pending', 'completed', 'failed')),
+      transfer_date TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (from_account) REFERENCES accounts(name),
       FOREIGN KEY (to_account) REFERENCES accounts(name)

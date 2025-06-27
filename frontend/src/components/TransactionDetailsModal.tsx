@@ -71,10 +71,18 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({ trans
             <span className="font-medium">{transaction.formatted_amount}</span>
           </div>
           {transaction.exchange_rate !== 1 && transaction.formatted_converted_amount && (
-            <div className="flex justify-between">
-              <span className="text-gray-600">Converted</span>
-              <span className="font-medium">{transaction.formatted_converted_amount}</span>
-            </div>
+            <>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Converted</span>
+                <span className="font-medium">{transaction.formatted_converted_amount}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">FX Rate</span>
+                <span className="font-medium">
+                  1 {transaction.currency} = {transaction.exchange_rate} {transaction.to_account?.split('_').pop() || ''}
+                </span>
+              </div>
+            </>
           )}
           <div className="flex justify-between">
             <span className="text-gray-600">Status</span>

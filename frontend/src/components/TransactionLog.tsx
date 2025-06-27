@@ -4,6 +4,7 @@ import TransactionItem from './TransactionItem';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 import TransactionDetailsModal from './TransactionDetailsModal';
+import { useAccounts } from '../hooks/useAccounts';
 
 interface TransactionLogProps {
   transactions: Transaction[];
@@ -29,17 +30,21 @@ const TransactionLog: React.FC<TransactionLogProps> = ({
   const [filter, setFilter] = useState<'all' | 'incoming' | 'outgoing'>('all');
   const [currencyFilter, setCurrencyFilter] = useState<string>('all');
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [accountFilter, setAccountFilter] = useState<string>('all');
+  const { accounts } = useAccounts();
 
   const filteredTransactions = transactions.filter(transaction => {
+    // Filter by account
+    if (accountFilter !== 'all') {
+      if (transaction.from_account !== accountFilter && transaction.to_account !== accountFilter) return false;
+    }
     // Filter by direction
     if (currentAccount) {
       if (filter === 'incoming' && transaction.to_account !== currentAccount) return false;
       if (filter === 'outgoing' && transaction.from_account !== currentAccount) return false;
     }
-
     // Filter by currency
     if (currencyFilter !== 'all' && transaction.currency !== currencyFilter) return false;
-
     return true;
   });
 
@@ -87,6 +92,22 @@ const TransactionLog: React.FC<TransactionLogProps> = ({
 
       {showFilters && (
         <div className="mb-6 space-y-3">
+          {/* Account Filter */}
+          <div className="flex space-x-2 items-center">
+            <label htmlFor="account-filter" className="text-sm font-medium text-gray-700">Account:</label>
+            <select
+              id="account-filter"
+              value={accountFilter}
+              onChange={e => setAccountFilter(e.target.value)}
+              className="px-3 py-2 rounded-lg border border-kcb-primary text-sm font-medium focus:ring-2 focus:ring-kcb-primary focus:border-kcb-primary"
+            >
+              <option value="all">All Accounts</option>
+              {accounts.map(acc => (
+                <option key={acc.name} value={acc.name}>{acc.name}</option>
+              ))}
+            </select>
+          </div>
+
           {/* Direction Filter */}
           {currentAccount && (
             <div className="flex space-x-2">
