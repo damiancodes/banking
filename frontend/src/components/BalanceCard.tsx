@@ -22,8 +22,10 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ summary, onCurrencySelect }) 
             onClick={() => onCurrencySelect?.(item.currency)}
             className="flex items-center gap-2 px-4 py-2 bg-white rounded-xl shadow-card hover:shadow-card-hover transition-all duration-200 hover:scale-105"
           >
-            <CurrencyIcon currency={item.currency} size="sm" />
-            <span className="font-medium text-gray-900">{item.currency}</span>
+            {/* Country Flag */}
+            {item.currency === 'KES' && <span className="text-xl">🇰🇪</span>}
+            {item.currency === 'NGN' && <span className="text-xl">🇳🇬</span>}
+            {item.currency === 'USD' && <span className="text-xl">🇺🇸</span>}
             <span className="font-semibold text-lg text-gray-900">{abbreviate(item.total_balance)}</span>
           </button>
           {idx < summary.length - 1 && (

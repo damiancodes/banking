@@ -8,7 +8,8 @@ import AccountList from '../components/AccountList';
 import TransactionLog from '../components/TransactionLog';
 import TransferForm from '../components/TransferForm';
 import QuickActions from '../components/QuickActions';
-import SuccessMessage from '../components/SuccessMessage';
+import TransactionChart from '../components/TransactionChart';
+import { useToasts } from '../components/ToastContainer';
 
 type ViewMode = 'overview' | 'accounts' | 'transfer' | 'history';
 
@@ -16,7 +17,7 @@ const Dashboard: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewMode>('overview');
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [selectedCurrency, setSelectedCurrency] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const { showSuccess, showError } = useToasts();
 
   const {
     accounts,
@@ -39,15 +40,39 @@ const Dashboard: React.FC = () => {
   } = useTransactions();
 
   const handleRefresh = async () => {
-    await Promise.all([refreshAccounts(), refreshTransactions()]);
+    try {
+      await Promise.all([refreshAccounts(), refreshTransactions()]);
+      showSuccess('Refreshed', 'Data updated successfully');
+    } catch (error) {
+      showError('Refresh Failed', 'Unable to update data');
+    }
   };
 
   const handleTransfer = async (transferData: any) => {
-    const result = await createTransaction(transferData);
-    if (result) {
-      setSuccessMessage(`Transfer of ${result.formatted_amount} completed successfully!`);
-      setCurrentView('overview');
-      refreshAccounts(); // Refresh to get updated balances
+    try {
+      const result = await createTransaction(transferData);
+      if (result) {
+        // Check if it's a future transfer
+        const isFutureTransfer = transferData.note?.includes('transfer_date:') && 
+          new Date(transferData.note.split('transfer_date:')[1]) > new Date();
+        
+        if (isFutureTransfer) {
+          showSuccess(
+            'Transfer Scheduled!', 
+            'Your transfer has been scheduled for the selected date.'
+          );
+        } else {
+          showSuccess(
+            'Transfer Completed!', 
+            `Transfer of ${result.formatted_amount} completed successfully!`
+          );
+        }
+        
+        setCurrentView('overview');
+        refreshAccounts(); // Refresh to get updated balances
+      }
+    } catch (error) {
+      showError('Transfer Failed', 'There was an error processing your transfer');
     }
   };
 
@@ -74,7 +99,7 @@ const Dashboard: React.FC = () => {
             <div className="flex items-center justify-between px-4">
               <button
                 onClick={() => setCurrentView('overview')}
-                className="flex items-center text-kcb-primary"
+                className="flex items-center text-kcb-primary hover:text-kcb-secondary transition-colors"
               >
                 <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -102,7 +127,7 @@ const Dashboard: React.FC = () => {
             <div className="flex items-center px-4">
               <button
                 onClick={() => setCurrentView('overview')}
-                className="flex items-center text-kcb-primary"
+                className="flex items-center text-kcb-primary hover:text-kcb-secondary transition-colors"
               >
                 <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -129,7 +154,7 @@ const Dashboard: React.FC = () => {
             <div className="flex items-center px-4">
               <button
                 onClick={() => setCurrentView('overview')}
-                className="flex items-center text-kcb-primary"
+                className="flex items-center text-kcb-primary hover:text-kcb-secondary transition-colors"
               >
                 <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -166,12 +191,20 @@ const Dashboard: React.FC = () => {
               onCurrencySelect={handleCurrencySelect}
             />
 
+            {/* Analytics Section */}
+            <div className="px-4">
+              <TransactionChart 
+                transactions={transactions} 
+                className="mb-6"
+              />
+            </div>
+
             <div className="px-4">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold">Your Accounts</h2>
                 <button
                   onClick={() => setCurrentView('accounts')}
-                  className="text-kcb-primary text-sm font-medium"
+                  className="text-kcb-primary text-sm font-medium hover:text-kcb-secondary transition-colors"
                 >
                   View All
                 </button>
@@ -209,15 +242,6 @@ const Dashboard: React.FC = () => {
         onRefresh={handleRefresh}
         isRefreshing={accountsLoading}
       />
-      {successMessage && (
-        <div className="px-4 pt-4">
-          <SuccessMessage
-            message={successMessage}
-            autoHide={true}
-            onClose={() => setSuccessMessage(null)}
-          />
-        </div>
-      )}
       <div className="pt-6">
         {renderCurrentView()}
       </div>

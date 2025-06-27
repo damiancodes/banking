@@ -20,30 +20,25 @@ const AccountCard: React.FC<AccountCardProps> = ({
     <button
       onClick={onClick}
       className={`
-        card p-4 text-left w-full transition-all duration-200
+        card px-3 py-2 text-left w-full transition-all duration-200
         ${isSelected ? 'ring-2 ring-kcb-primary shadow-lg' : 'hover:shadow-lg'}
         ${account.currency === 'KES' ? 'currency-kes' : ''}
         ${account.currency === 'USD' ? 'currency-usd' : ''}
         ${account.currency === 'NGN' ? 'currency-ngn' : ''}
       `}
     >
-      <div className="flex items-start justify-between">
-        <div className="flex items-center space-x-3">
+      <div className="flex items-center justify-between gap-1">
+        <div className="flex items-center gap-2 min-w-0">
           <CurrencyIcon currency={account.currency} size="md" />
-          <div>
-            <h3 className="font-semibold text-gray-900">{account.name}</h3>
-            <p className="text-sm text-gray-600">{account.currency}</p>
+          <div className="min-w-0">
+            <h3 className="font-semibold text-gray-900 truncate">{account.name}</h3>
+            <p className="text-xs text-gray-500 uppercase tracking-wide">{account.currency}</p>
           </div>
         </div>
-        
-        <div className="text-right">
-          <p className="font-bold text-lg text-gray-900">
-            {account.formatted_balance}
-          </p>
+        <div className="flex flex-col items-end min-w-0">
+          <span className="font-bold text-base text-gray-900 tabular-nums">{account.formatted_balance}</span>
           {showDetails && (
-            <p className="text-xs text-gray-500">
-              Updated {formatDate(account.updated_at)}
-            </p>
+            <span className="text-xs text-gray-400">{formatDate(account.updated_at)}</span>
           )}
         </div>
       </div>

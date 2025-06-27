@@ -4,6 +4,7 @@ import TransactionItem from './TransactionItem';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 import TransactionDetailsModal from './TransactionDetailsModal';
+import TransactionSkeleton from './TransactionSkeleton';
 import { useAccounts } from '../hooks/useAccounts';
 
 interface TransactionLogProps {
@@ -23,54 +24,62 @@ const TransactionLog: React.FC<TransactionLogProps> = ({
   error = null,
   onTransactionClick,
   currentAccount,
-  showFilters = true,
+  showFilters = false,
   onRetry,
   title = 'Recent Transactions'
 }) => {
-  const [filter, setFilter] = useState<'all' | 'incoming' | 'outgoing'>('all');
-  const [currencyFilter, setCurrencyFilter] = useState<string>('all');
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [accountFilter, setAccountFilter] = useState<string>('all');
+  const [accountFilter, setAccountFilter] = useState('all');
+  const [directionFilter, setDirectionFilter] = useState('all');
   const { accounts } = useAccounts();
 
-  const filteredTransactions = transactions.filter(transaction => {
-    // Filter by account
-    if (accountFilter !== 'all') {
-      if (transaction.from_account !== accountFilter && transaction.to_account !== accountFilter) return false;
+  const handleTransactionClick = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    if (onTransactionClick) {
+      onTransactionClick(transaction);
     }
-    // Filter by direction
-    if (currentAccount) {
-      if (filter === 'incoming' && transaction.to_account !== currentAccount) return false;
-      if (filter === 'outgoing' && transaction.from_account !== currentAccount) return false;
-    }
-    // Filter by currency
-    if (currencyFilter !== 'all' && transaction.currency !== currencyFilter) return false;
-    return true;
-  });
-
-  const groupTransactionsByDate = (transactions: Transaction[]) => {
-    const groups: Record<string, Transaction[]> = {};
-    
-    transactions.forEach(transaction => {
-      const date = new Date(transaction.created_at).toDateString();
-      if (!groups[date]) {
-        groups[date] = [];
-      }
-      groups[date].push(transaction);
-    });
-
-    return groups;
   };
 
-  const groupedTransactions = groupTransactionsByDate(filteredTransactions);
+  const closeModal = () => {
+    setSelectedTransaction(null);
+  };
+
+  // Filter transactions based on selected filters
+  const filteredTransactions = transactions.filter(transaction => {
+    // Account filter
+    if (accountFilter !== 'all') {
+      if (accountFilter === 'incoming') {
+        if (!currentAccount || transaction.to_account !== currentAccount) return false;
+      } else if (accountFilter === 'outgoing') {
+        if (!currentAccount || transaction.from_account !== currentAccount) return false;
+      } else {
+        if (transaction.from_account !== accountFilter && transaction.to_account !== accountFilter) return false;
+      }
+    }
+
+    // Direction filter
+    if (directionFilter !== 'all') {
+      if (directionFilter === 'incoming') {
+        if (!currentAccount || transaction.to_account !== currentAccount) return false;
+      } else if (directionFilter === 'outgoing') {
+        if (!currentAccount || transaction.from_account !== currentAccount) return false;
+      }
+    }
+
+    return true;
+  });
 
   if (loading) {
     return (
       <div className="card">
-        <div className="flex justify-center items-center py-8">
-          <LoadingSpinner size="lg" />
-          <span className="ml-3 text-gray-600">Loading transactions...</span>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          <div className="flex items-center space-x-2">
+            <LoadingSpinner size="sm" />
+            <span className="text-sm text-gray-500">Loading...</span>
+          </div>
         </div>
+        <TransactionSkeleton count={8} />
       </div>
     );
   }
@@ -91,110 +100,74 @@ const TransactionLog: React.FC<TransactionLogProps> = ({
       </div>
 
       {showFilters && (
-        <div className="mb-6 space-y-3">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:space-x-6 gap-3">
           {/* Account Filter */}
-          <div className="flex space-x-2 items-center">
-            <label htmlFor="account-filter" className="text-sm font-medium text-gray-700">Account:</label>
+          <div className="flex space-x-2 items-center flex-1 min-w-0">
+            <label htmlFor="account-filter" className="text-sm font-medium text-gray-700 whitespace-nowrap">Account:</label>
             <select
               id="account-filter"
               value={accountFilter}
               onChange={e => setAccountFilter(e.target.value)}
-              className="px-3 py-2 rounded-lg border border-kcb-primary text-sm font-medium focus:ring-2 focus:ring-kcb-primary focus:border-kcb-primary"
+              className="px-3 py-2 rounded-lg border border-kcb-primary text-sm font-medium focus:ring-2 focus:ring-kcb-primary focus:border-kcb-primary w-full"
             >
               <option value="all">All Accounts</option>
+              <option value="incoming">Incoming Only</option>
+              <option value="outgoing">Outgoing Only</option>
               {accounts.map(acc => (
                 <option key={acc.name} value={acc.name}>{acc.name}</option>
               ))}
             </select>
           </div>
-
           {/* Direction Filter */}
-          {currentAccount && (
-            <div className="flex space-x-2">
-              {[
-                { key: 'all', label: 'All' },
-                { key: 'incoming', label: 'Incoming' },
-                { key: 'outgoing', label: 'Outgoing' }
-              ].map(option => (
-                <button
-                  key={option.key}
-                  onClick={() => setFilter(option.key as any)}
-                  className={`
-                    px-3 py-2 rounded-lg text-sm font-medium transition-all border
-                    ${filter === option.key 
-                      ? 'bg-kcb-primary text-white border-kcb-primary shadow'
-                      : 'bg-white text-kcb-primary border-kcb-primary hover:bg-kcb-light hover:text-kcb-primary'}
-                  `}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Currency Filter */}
-          <div className="flex space-x-2">
-            {['all', 'KES', 'USD', 'NGN'].map(currency => (
-              <button
-                key={currency}
-                onClick={() => setCurrencyFilter(currency)}
-                className={`
-                  px-3 py-2 rounded-lg text-sm font-medium transition-all border
-                  ${currencyFilter === currency 
-                    ? 'bg-kcb-primary text-white border-kcb-primary shadow'
-                    : 'bg-white text-kcb-primary border-kcb-primary hover:bg-kcb-light hover:text-kcb-primary'}
-                `}
-              >
-                {currency === 'all' ? 'All Currencies' : currency}
-              </button>
-            ))}
+          <div className="flex space-x-2 items-center flex-1 min-w-0 mt-2 sm:mt-0">
+            <label htmlFor="direction-filter" className="text-sm font-medium text-gray-700 whitespace-nowrap">Direction:</label>
+            <select
+              id="direction-filter"
+              value={directionFilter}
+              onChange={e => setDirectionFilter(e.target.value)}
+              className="px-3 py-2 rounded-lg border border-kcb-primary text-sm font-medium focus:ring-2 focus:ring-kcb-primary focus:border-kcb-primary w-full"
+            >
+              <option value="all">All</option>
+              <option value="incoming">Incoming</option>
+              <option value="outgoing">Outgoing</option>
+            </select>
           </div>
         </div>
       )}
 
-      {Object.keys(groupedTransactions).length === 0 ? (
-        <div className="text-center py-8">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-          </svg>
-          <p className="mt-2 text-gray-600">No transactions found</p>
-          <p className="text-sm text-gray-500">Transactions will appear here once you make transfers</p>
+      {filteredTransactions.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No transactions found</h3>
+          <p className="text-gray-500">
+            {showFilters ? 'Try adjusting your filters or make your first transfer.' : 'Make your first transfer to see transactions here.'}
+          </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {Object.entries(groupedTransactions)
-            .sort(([a], [b]) => new Date(b).getTime() - new Date(a).getTime())
-            .map(([date, dayTransactions]) => (
-              <div key={date}>
-                <h3 className="text-base font-bold text-kcb-primary mb-2 px-1">
-                  {new Date(date).toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </h3>
-                <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                  {dayTransactions.map((transaction) => (
-                    <TransactionItem
-                      key={transaction.id}
-                      transaction={transaction}
-                      currentAccount={currentAccount}
-                      onClick={() => setSelectedTransaction(transaction)}
-                      showDetails={true}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
+        <div className="space-y-1">
+          {filteredTransactions.map((transaction) => (
+            <TransactionItem
+              key={transaction.id}
+              transaction={transaction}
+              currentAccount={currentAccount}
+              onClick={() => handleTransactionClick(transaction)}
+              showDetails={true}
+            />
+          ))}
         </div>
       )}
 
       {/* Transaction Details Modal */}
-      <TransactionDetailsModal
-        transaction={selectedTransaction}
-        onClose={() => setSelectedTransaction(null)}
-      />
+      {selectedTransaction && (
+        <TransactionDetailsModal
+          transaction={selectedTransaction}
+          onClose={closeModal}
+        />
+      )}
     </div>
   );
 };

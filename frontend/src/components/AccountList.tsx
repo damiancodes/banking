@@ -64,14 +64,14 @@ const AccountList: React.FC<AccountListProps> = ({
   return (
     <div className="space-y-4">
       {/* Search Bar */}
-      <div className="px-4">
-        <div className="relative w-full max-w-xs mx-auto mb-2">
+      <div className="px-4 mb-1 mt-2">
+        <div className="relative w-full max-w-xs mx-auto mb-1">
           <input
             type="text"
             placeholder="Search accounts..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-full bg-white/90 text-base border border-gray-200 shadow focus:ring-2 focus:ring-kcb-primary focus:border-kcb-primary transition"
+            className="w-full pl-10 pr-4 py-2 rounded-full bg-white/95 text-base border border-gray-200 focus:border-kcb-primary focus:ring-2 focus:ring-kcb-primary focus:shadow-lg focus:shadow-kcb-primary/20 shadow-sm transition placeholder-gray-400 outline-none"
           />
           <svg
             className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
@@ -85,14 +85,16 @@ const AccountList: React.FC<AccountListProps> = ({
       </div>
 
       {/* Account Groups */}
-      {Object.entries(groupedAccounts).map(([currency, currencyAccounts]) => (
-        <div key={currency} className="px-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-gray-900">{currency} Accounts</h3>
-            <span className="text-sm text-gray-500">{currencyAccounts.length} accounts</span>
+      {Object.entries(groupedAccounts).map(([currency, currencyAccounts], idx) => (
+        <section key={currency} className={`px-4 mb-2${idx === 0 ? ' mt-2' : ''}`}>
+          <div className="flex items-center justify-between mb-1 mt-3">
+            <h3 className="text-lg font-bold text-kcb-primary tracking-wide flex items-center gap-2">
+              {currency} <span className="text-xs font-semibold text-gray-400 uppercase">Accounts</span>
+            </h3>
+            <span className="text-xs text-gray-500">{currencyAccounts.length} accounts</span>
           </div>
-          
-          <div className="space-y-3">
+          <div className="border-b border-gray-200 mb-2" />
+          <div className="space-y-1">
             {currencyAccounts.map((account) => (
               <AccountCard
                 key={account.id}
@@ -103,7 +105,7 @@ const AccountList: React.FC<AccountListProps> = ({
               />
             ))}
           </div>
-        </div>
+        </section>
       ))}
 
       {filteredAccounts.length === 0 && !loading && (

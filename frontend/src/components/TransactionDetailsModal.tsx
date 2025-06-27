@@ -54,7 +54,7 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({ trans
           <CurrencyIcon currency={transaction.currency} size="md" />
           <h2 className="ml-3 text-lg font-bold text-gray-900">Transaction Details</h2>
           {scheduled && (
-            <span className="ml-2 bg-kcb-primary text-white px-2 py-1 rounded-full text-xs font-semibold">Scheduled</span>
+            <span className="ml-2 bg-purple-600 text-white px-2 py-1 rounded-full text-xs font-semibold">Scheduled</span>
           )}
         </div>
         <div className="space-y-2">
@@ -86,7 +86,7 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({ trans
           )}
           <div className="flex justify-between">
             <span className="text-gray-600">Status</span>
-            <span className="font-medium capitalize">{transaction.status}</span>
+            <span className="font-medium capitalize">{scheduled ? 'Scheduled' : transaction.status}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Transfer Date</span>

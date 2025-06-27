@@ -107,7 +107,7 @@ const TransactionItem: React.FC<TransactionItemProps> = ({
               <CurrencyIcon currency={transaction.currency} size="sm" />
               {/* Scheduled badge for future-dated transfers */}
               {isFutureDate(transferDate) && (
-                <span className="ml-2 bg-kcb-primary text-white px-2 py-1 rounded-full text-xs font-semibold">Scheduled</span>
+                <span className="ml-2 bg-purple-600 text-white px-2 py-1 rounded-full text-xs font-semibold">Scheduled</span>
               )}
             </div>
             <div className="text-right">
@@ -125,7 +125,7 @@ const TransactionItem: React.FC<TransactionItemProps> = ({
               <span>{formatDate(transaction.created_at, 'Africa/Nairobi')}</span>
               <span>•</span>
               <span>{formatTime(transaction.created_at, 'Africa/Nairobi')}</span>
-              {showDetails && (
+              {showDetails && !isFutureDate(transferDate) && (
                 <>
                   <span>•</span>
                   {getStatusBadge()}
@@ -141,9 +141,18 @@ const TransactionItem: React.FC<TransactionItemProps> = ({
           </div>
           
           {transaction.note && showDetails && (
-            <p className="text-xs text-gray-600 mt-1 truncate">
-              Note: {transaction.note}
-            </p>
+            (() => {
+              // Remove transfer_date:YYYY-MM-DD from the note
+              const cleanedNote = transaction.note.replace(/\s*transfer_date:\d{4}-\d{2}-\d{2}/, '').trim();
+              if (cleanedNote) {
+                return (
+                  <p className="text-xs text-gray-600 mt-1 truncate">
+                    Note: {cleanedNote}
+                  </p>
+                );
+              }
+              return null;
+            })()
           )}
         </div>
 

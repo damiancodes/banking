@@ -66,23 +66,16 @@ const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="space-y-2">
-        <div className="flex items-center space-x-2">
-          <svg className="w-4 h-4 text-kcb-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-          </svg>
-          <p className="text-kcb-light text-sm font-medium">Total </p>
-        </div>
         <div className="flex items-baseline space-x-2">
           {balanceVisible ? (
-            <h2 className="text-2xl font-medium header-amount">
+            <h2 className="text-3xl font-light header-amount text-white" style={{ fontFamily: 'Inter, sans-serif' }}>
               {formatCurrency(totalBalance, 'USD')}
             </h2>
           ) : (
-            <h2 className="text-2xl font-medium text-kcb-light header-amount">
+            <h2 className="text-3xl font-light text-kcb-light header-amount" style={{ fontFamily: 'Inter, sans-serif' }}>
               ••••••••
             </h2>
           )}
-          <span className="text-kcb-light text-sm">USD </span>
         </div>
       </div>
     </div>
